@@ -29,14 +29,12 @@ from transliterate import translit
 from answer import * #файл с ответами
 from config import * #файл со словарём команд и их тригерами
 
-#создание модели
 model = Model(r'C:\Users\1\Desktop\python\EVA\small_model')
 rec = KaldiRecognizer(model, 16000)
 p = pyaudio.PyAudio()
 stream = p.open(format=pyaudio.paInt16, channels=1,
 				rate=16000, input=True, frames_per_buffer=8000)
 language = 'ru'
-# model_id = 'v4_ru'
 model_id = 'v3_1_ru'
 sample_rate = 48000
 speaker = 'xenia'  # aidar, baya, kseniya, xenia, eugene, random
@@ -45,11 +43,10 @@ model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
 						  model='silero_tts',
 						  language=language,
 						  speaker=model_id)
-model.to('cpu')  # gpu or cpu
-# stream.start_stream()
+model.to('cpu') 
 
 answer_text = ''
-#прослушивание речи
+
 def listen():
 	while True:
 		data = stream.read(4000, exception_on_overflow=False)
@@ -58,9 +55,8 @@ def listen():
 			yield answer['text']
 
 audio = model.apply_tts(text='абвгдеежзийклмнопрстуфхцчшщъыьэюя', speaker=speaker, sample_rate=sample_rate)
-# print('кэш закончен')
 
-#таймер до перехода в режим ожидания
+
 def timer():
 	global command_keys, answer_text, text
 	print('таймер запущен')
@@ -77,7 +73,6 @@ def timer():
 					bye()
 					return
 
-#озвучка текста голосом
 def voice_out(answer_text):
 	stream.stop_stream()
 	audio = model.apply_tts(text=answer_text, speaker=speaker, sample_rate=sample_rate)
@@ -87,7 +82,7 @@ def voice_out(answer_text):
 	time.sleep(0.10)
 	stream.start_stream()
 
-#для проигрывания зараннее заготовленных ответов на простые одноэтапные функции и вывода строки состояния
+
 def play_recorder_voice(command_keys):
 	global answer_index, text
 	stream.stop_stream()
@@ -102,7 +97,7 @@ def play_recorder_voice(command_keys):
 	stream.start_stream()
 
 
-#транслитерация английских слов (очень плохо, но пока сойдет)
+#транслитерация английских слов
 def transliteration(text):
 	cyrillic = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 	latin = 'а|б|с|д|е|ф|г|х|и|дж|к|л|м|н|о|п|к|р|с|т|у|в|в|кс|й|з|А|Б|Ц|Д|И|Ф|Г|АШ|И|ДЖЕЙ|К|Л|М|Н|О|П|К|Р|С|Т|Ю|В|В|КС|Й|З'.split('|')
@@ -123,7 +118,7 @@ def choose_command(text, abs=True):
 				command_value_list.append(commands[keys][i])
 				command_value = commands[keys][i]
 				command_list.append(keys)
-	command_list = list(set(command_list)) #удаление повторов из command_list
+	command_list = list(set(command_list)) 
 	print(command_list)
 	if 'WIKIPEDIA' in command_list:
 		command_keys = 'WIKIPEDIA'
@@ -148,7 +143,6 @@ def choose_command(text, abs=True):
 	return command_keys
 
 
-#Функции голосового помощника (действия)
 def open_browser():
 	webbrowser.open('https://ya.ru')
 	play_recorder_voice('OPEN_BROWSER')
@@ -168,13 +162,10 @@ def music_recognize():
 	play_recorder_voice('MUSIC_RECOGNIZE')
 	file_name = 'music.mp3'
 	start_shazam = False
-	# stream.stop_stream()
 	try:
-		# print('пошло дело')
 		recording = sd.rec((7 * 44100), samplerate=44100, channels=1)
 		sd.wait()
 		write(f'{file_name}', 44100, recording)
-		# print('готова!!')
 		start_shazam = not start_shazam
 		while start_shazam:
 			async def main():
@@ -198,22 +189,21 @@ def music_recognize():
 
 def wikipedia():
 	global answer_text
-	command_value_list = command_value.split() #преобразование сказанной фразы и значения ключа команды в список
+	command_value_list = command_value.split() 
 	text_list = text.split()
 	index_start_command = 0
-	for i in text_list:     #удаление слов до запроса пользователя
+	for i in text_list:  
 		if fuzz.token_set_ratio(i, command_value_list[0]) > 80:
 			index_start_command = text_list.index(i)
 	del text_list[0:index_start_command + 1]
 	query_word = ' '.join(text_list)
-	# print(query_word)
 	try:
 		wiki.set_lang('ru')
 		query = wiki.summary(query_word, sentences = 10)
 		delete_brackets_text = re.sub("\[.*?\]", "", query)
 		delete_brackets_text = re.sub("\(.*?\)", "", delete_brackets_text)
 		sentences = delete_brackets_text.split('.')
-		while len(sentences) > 1: #укорачивание найденного текста-ответа до одного предложения
+		while len(sentences) > 1:
 			sentences.pop(-1)
 		sentences = '.'.join(sentences)
 		answer_text += sentences
@@ -223,10 +213,6 @@ def wikipedia():
 		answer_text = 'Попробуйте уточнить ваш запрос'
 		status_bar(text)
 		voice_out(answer_text)
-
-
-# status_bar(text)
-# voice_out(answer_text)
 
 def screen_brightness():
 	print(123)
@@ -373,7 +359,7 @@ def calculator():
 	index_command_value = 0
 	first_number_list = []
 	second_number_list = []
-	for i in text_list: #поиск командного слова в фразе
+	for i in text_list: 
 		if fuzz.token_set_ratio(i, command_value) > 70: #!
 			index_command_value = text_list.index(i)
 	for i in range(len(text_list)):
@@ -402,7 +388,6 @@ def calculator():
 	else:
 		first_number = t2n(' '.join(first_number_list[::-1]), 'ru')
 		second_number = t2n(' '.join(second_number_list), 'ru')
-		# print(first_number, second_number)
 		if command_value == 'плюс':
 			result = n2t(first_number + second_number)
 			answer_text = result + answer_text
@@ -436,7 +421,6 @@ def help():
 	voice_out(answer_text)
 
 
-#выбор ком порта с приемником
 try:
 	ports = serial.tools.list_ports.comports()
 	com_port = ''
@@ -474,47 +458,17 @@ def temp_hum_sensor():
 		voice_out(f'сейчас температура в комнате {temp}, а влажность {hum} ')
 	else:
 		voice_out('не могу получить информацию с датчика')
-# def personal_timer():
-# 	global text
-# 	text_list = text.split()
-# 	timer_list = []
-# 	timer_list_sorted = []
-# 	last_index = -1
-# 	for i in range(len(text_list)):
-# 		try:
-# 			timer_list.append(t2n(text_list[i], 'ru'))
-# 		except:
-# 			if fuzz.token_set_ratio('часов', text_list[i]) > 80 or fuzz.token_set_ratio('минут', text_list[i]) > 80 or fuzz.token_set_ratio('секунд', text_list[i]) > 80:
-# 				timer_list.append(text_list[i])
-# 	for i in range(len(timer_list)):
-# 		if type(timer_list[i]) == str:
-# 			num = sum(timer_list[last_index + 1:timer_list.index(timer_list[i]):])
-# 			timer_list_sorted.append(num)
-# 			timer_list_sorted.append(timer_list[i])
-# 			last_index = timer_list.index(timer_list[i])
-# 	print(text_list)
-# 	print(timer_list)
-# 	print(timer_list_sorted)
-# 	timing = time.time()
-# 	while True:
-# 		if time.time() - timing > 20.0:
-# 			print(1)
-# 			voice_out('время вышло')
-# 			break
 
 
 
-#вывод строки состояния
+
+
 def status_bar(text):
 	print(f'РАСПОЗНАНО: {text} \nКОМАНДА: {command_keys} \nОТВЕТ: {answer_text}')
-
-#начальная фраза
-# play_recorder_voice('START')
 
 now = datetime.now()
 current_time =  now.strftime("%H")
 if int(current_time) >= 17:
-	# answer_text = answers['START'][randint(0, len(answers['START']) - 1)]
 	answer_text = answers['START'][1]
 else:
 	answer_text = answers['START'][-1]
@@ -522,10 +476,6 @@ else:
 print(answer_text)
 voice_out(answer_text)
 
-
-# #основной алгоритм работы
-# if __name__ == '__main__':
-# 	listen()
 for text in listen():
 	global query
 	query = text
