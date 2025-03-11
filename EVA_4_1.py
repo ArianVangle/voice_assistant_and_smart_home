@@ -505,6 +505,7 @@ def help():
 # except:
 # 	pass
 
+
 def com_receiving():
 	print('вызов ком ресевинг')
 	try:
@@ -514,14 +515,15 @@ def com_receiving():
 			str_port = str(port)
 			if 'USB-SERIAL CH340' in str_port:
 				com_port = str(port[0])
-		serial_port = serial.Serial(com_port, baudrate=9600, timeout=3)
+		serial_port = serial.Serial(com_port, baudrate=9600, timeout=4)
 		print(com_port)
 		serial_port.flushInput()
 		data = serial_port.readline().decode().strip()
 		now = datetime.now()
 		current_time =  now.strftime("%d/%m/%Y %H:%M:%S")
 		with open('sensor.txt', 'a', encoding='utf8') as file:
-			file.write(current_time + ' ' + 'температура ' + data.split()[1][:-2] + "  " + 'влажность ' + data.split()[3][:-1] + '\n')
+			# file.write(current_time + ' ' + 'температура ' + data.split()[1][:-2] + "  " + 'влажность ' + data.split()[3][:-1] + '\n')
+			file.write(current_time + ' ' + data +  '\n')
 		return data
 	except:
 		return 0

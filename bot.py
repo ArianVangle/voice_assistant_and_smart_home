@@ -204,9 +204,18 @@ try:
 except:
 	pass
 
+
 def com_receiving():
 	print('вызов ком ресевинг')
 	try:
+		ports = serial.tools.list_ports.comports()
+		com_port = ''
+		for port in ports:
+			str_port = str(port)
+			if 'USB-SERIAL CH340' in str_port:
+				com_port = str(port[0])
+		serial_port = serial.Serial(com_port, baudrate=9600, timeout=4)
+		print(com_port)
 		serial_port.flushInput()
 		data = serial_port.readline().decode().strip()
 		now = datetime.now()
@@ -215,7 +224,7 @@ def com_receiving():
 			file.write(current_time + ' ' + 'температура ' + data.split()[1][:-2] + "  " + 'влажность ' + data.split()[3][:-1] + '\n')
 		return data
 	except:
-		return 0 
+		return 0
 
 def light_control():
 	global text, answer_text
