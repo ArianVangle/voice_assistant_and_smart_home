@@ -26,8 +26,8 @@ import serial
 import serial.tools.list_ports
 from datetime import datetime
 from transliterate import translit
-from answer import * #файл с ответами
-from config import * #файл со словарём команд и их тригерами
+from answer import * 
+from config import * 
 from gpt_test import gpt4o_ans
 from smart_lamp import *
 import pymorphy3
@@ -36,9 +36,6 @@ import pymorphy3
 morph = pymorphy3.MorphAnalyzer()
 
 
-
-# from smart_lamp import change
-#создание модели распознавания речи
 model = Model(r'C:\Users\1\Desktop\python\EVA\small_model')
 rec = KaldiRecognizer(model, 16000)
 p = pyaudio.PyAudio()
@@ -55,7 +52,6 @@ model, _ = torch.hub.load(repo_or_dir='snakers4/silero-models',
 						  language=language,
 						  speaker=model_id)
 model.to('cpu')  # gpu or cpu
-# stream.start_stream()
 text = ''
 answer_text = ''
 #прослушивание речи
@@ -68,7 +64,6 @@ def listen():
 			yield answer['text']
 
 audio = model.apply_tts(text='абвгдеежзийклмнопрстуфхцчшщъыьэюя', speaker=speaker, sample_rate=sample_rate)
-# print('кэш закончен')
 
 #таймер до перехода в режим ожидания
 def timer():
@@ -97,7 +92,6 @@ def voice_out(answer_text):
 	time.sleep(0.10)
 	stream.start_stream()
 
-#для проигрывания зараннее заготовленных ответов на простые одноэтапные функции и вывода строки состояния
 def play_recorder_voice(command_keys):
 	global answer_index, text
 	stream.stop_stream()
@@ -110,13 +104,7 @@ def play_recorder_voice(command_keys):
 	playsound.playsound(p)
 	time.sleep(0.2)
 	stream.start_stream()
-
-#транслитерация английских слов (очень плохо, но пока сойдет)
-def transliteration(text):
-	cyrillic = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-	latin = 'а|б|с|д|е|ф|г|х|и|дж|к|л|м|н|о|п|к|р|с|т|у|в|в|кс|й|з|А|Б|Ц|Д|И|Ф|Г|АШ|И|ДЖЕЙ|К|Л|М|Н|О|П|К|Р|С|Т|Ю|В|В|КС|Й|З'.split('|')
-	return text.translate({ord(k):v for k,v in zip(cyrillic,latin)})
-
+	
 #универсальный выбор команды
 def choose_command(text, abs=True):
 	global command_value, command_keys, answer_text
@@ -132,7 +120,7 @@ def choose_command(text, abs=True):
 				command_value_list.append(commands[keys][i])
 				command_value = commands[keys][i]
 				command_list.append(keys)
-	command_list = list(set(command_list)) #удаление повторов из command_list
+	command_list = list(set(command_list)) 
 	print(command_list)
 	if 'WIKIPEDIA' in command_list:
 		command_keys = 'WIKIPEDIA'
@@ -188,8 +176,7 @@ def light_control():
 		answer_text = gpt4o_ans(text)
 		status_bar(text)
 		voice_out(answer_text)
-	# if fuzz.token_set_ratio('включить', text)>60: asyncio.run(turn(1))
-	# elif fuzz.token_set_ratio('выключить', text)>60: asyncio.run(turn(0))
+
 
 def open_browser():
 	global text
@@ -219,13 +206,10 @@ def music_recognize():
 	play_recorder_voice('MUSIC_RECOGNIZE')
 	file_name = 'music.mp3'
 	start_shazam = False
-	# stream.stop_stream()
 	try:
-		# print('пошло дело')
 		recording = sd.rec((7 * 44100), samplerate=44100, channels=1)
 		sd.wait()
 		write(f'{file_name}', 44100, recording)
-		# print('готова!!')
 		start_shazam = not start_shazam
 		while start_shazam:
 			async def main():
@@ -249,22 +233,21 @@ def music_recognize():
 
 def wikipedia():
 	global answer_text
-	command_value_list = command_value.split() #преобразование сказанной фразы и значения ключа команды в список
+	command_value_list = command_value.split() 
 	text_list = text.split()
 	index_start_command = 0
-	for i in text_list:     #удаление слов до запроса пользователя
+	for i in text_list:    
 		if fuzz.token_set_ratio(i, command_value_list[0]) > 80:
 			index_start_command = text_list.index(i)
 	del text_list[0:index_start_command + 1]
 	query_word = ' '.join(text_list)
-	# print(query_word)
 	try:
 		wiki.set_lang('ru')
 		query = wiki.summary(query_word, sentences = 10)
 		delete_brackets_text = re.sub("\[.*?\]", "", query)
 		delete_brackets_text = re.sub("\(.*?\)", "", delete_brackets_text)
 		sentences = delete_brackets_text.split('.')
-		while len(sentences) > 1: #укорачивание найденного текста-ответа до одного предложения
+		while len(sentences) > 1: 
 			sentences.pop(-1)
 		sentences = '.'.join(sentences)
 		answer_text += sentences
@@ -275,16 +258,11 @@ def wikipedia():
 		status_bar(text)
 		voice_out(answer_text)
 
-
-# status_bar(text)
-# voice_out(answer_text)
-
 def screen_brightness():
 	print(123)
 	global text
 	brightness = sbc.get_brightness()
 	print(text)
-	#--------------------------------------
 	brightness_list = []
 	text = text.split()
 	for i in text:
@@ -327,7 +305,6 @@ def change_volume():
 	global text, answer_text
 	current_volume = volume.GetMasterVolumeLevelScalar()
 	status_bar(text)
-#--------------------------------------
 	volume_list = []
 	text = text.split()
 	for i in text:
@@ -343,8 +320,6 @@ def change_volume():
 			return
 		except:
 			voice_out(f'минимум громкости - ноль, а максимум сто, не могу поставить {n2t(sum(volume_list))}')
-
-#------------------------------------------
 
 	if fuzz.token_set_ratio(text, 'повысь') > 90 or fuzz.token_set_ratio(text, 'увеличь') > 90 or fuzz.token_set_ratio(text, 'повысить') > 90:
 		volume.SetMasterVolumeLevelScalar(current_volume + 0.2, None)
@@ -424,8 +399,8 @@ def calculator():
 	index_command_value = 0
 	first_number_list = []
 	second_number_list = []
-	for i in text_list: #поиск командного слова в фразе
-		if fuzz.token_set_ratio(i, command_value) > 70: #!
+	for i in text_list: 
+		if fuzz.token_set_ratio(i, command_value) > 70: 
 			index_command_value = text_list.index(i)
 	for i in range(len(text_list)):
 		if text_list[i] == 'одну':
@@ -448,7 +423,6 @@ def calculator():
 			pass
 
 	if len(first_number_list) == 0 and len(second_number_list) == 0:
-		# voice_out('не могу складывать слова, на+учите?')
 		command_keys = 'GPT-4o'
 		answer_text = gpt4o_ans(text)
 		status_bar(text)
@@ -457,7 +431,6 @@ def calculator():
 	else:
 		first_number = t2n(' '.join(first_number_list[::-1]), 'ru')
 		second_number = t2n(' '.join(second_number_list), 'ru')
-		# print(first_number, second_number)
 		if command_value == 'плюс':
 			result = n2t(first_number + second_number)
 			answer_text = result + answer_text
@@ -491,21 +464,6 @@ def help():
 	voice_out(answer_text)
 
 
-
-#выбор ком порта с приемником
-# try:
-# 	ports = serial.tools.list_ports.comports()
-# 	com_port = ''
-# 	for port in ports:
-# 		str_port = str(port)
-# 		if 'USB-SERIAL CH340' in str_port:
-# 			com_port = str(port[0])
-# 	serial_port = serial.Serial(com_port, baudrate=9600, timeout=2)
-# 	print(com_port)
-# except:
-# 	pass
-
-
 def com_receiving():
 	print('вызов ком ресевинг')
 	try:
@@ -522,7 +480,6 @@ def com_receiving():
 		now = datetime.now()
 		current_time =  now.strftime("%d/%m/%Y %H:%M:%S")
 		with open('sensor.txt', 'a', encoding='utf8') as file:
-			# file.write(current_time + ' ' + 'температура ' + data.split()[1][:-2] + "  " + 'влажность ' + data.split()[3][:-1] + '\n')
 			file.write(current_time + ' ' + data +  '\n')
 		return data
 	except:
@@ -544,7 +501,7 @@ def temp_hum_sensor():
 
 def gas_sensor():
 	rec = com_receiving()
-	# print(rec.split())
+
 	if rec != 0:
 		print(rec)
 		units_gas = ((u'миллионная доля', u'миллионной доли', u'миллионных долей'), 'f')
@@ -555,7 +512,7 @@ def gas_sensor():
 	else:
 		voice_out('не могу получить информацию с датчика')
 
-#вывод строки состояния
+
 def status_bar(text):
 	global command_keys, answer_text
 	print(f'РАСПОЗНАНО: {text} \nКОМАНДА: {command_keys} \nОТВЕТ: {answer_text}')
@@ -573,8 +530,6 @@ voice_out(answer_text)
 
 
 for text in listen():
-	# global query
-	# query = text
 	if text:
 		print('распознание в основном цикле')
 		choose_command(text)
