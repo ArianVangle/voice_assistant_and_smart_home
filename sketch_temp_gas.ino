@@ -30,7 +30,7 @@ float VOUT, RS, Y;
 
 void setup() {
   Serial.begin(9600);
-  pinMode(gasPinAn, INPUT); // режим работы аналогового пина
+  pinMode(gasPinAn, INPUT); 
   pinMode(gasPinDig, INPUT);
   radio.begin();
   radio.setDataRate(RF24_250KBPS);
@@ -46,7 +46,7 @@ void setup() {
 void loop() {
   int h = dht.readHumidity();
   int t = dht.readTemperature();
-  // float ppm = gasSensor.getCO2CorrectedPPM(t, h);
+
   float ppm = gasSensor.getCO2CorrectedPPM(t, h);
   float rzero = gasSensor.getCO2CorrectedRZero(t, h);
   tempHum[0] = t;
@@ -55,13 +55,7 @@ void loop() {
   tempHum[3] = rzero;
   radio.write(&tempHum, sizeof(tempHum));
   delay(1000);
-  // analogValue = analogRead(gasPinAn);
-  // VOUT = analogValue * VIN / SCALE;
-  // RS = ((VIN - VOUT) * RL) / VOUT;
-  // Y = RS/R0;
-  // X = round(pow(Y / A, 1/ P));
-  // Serial.print("My ");
-  // Serial.println(analogRead(X));
+
   Serial.print("PPM ");
   Serial.print(ppm);
   Serial.print(" RZERO ");
@@ -72,21 +66,6 @@ void loop() {
   Serial.print("HUM ");
   Serial.print(h);
   Serial.println();
-  // Serial.println(rzero);
-  // Serial.print(" ");
-  // Serial.print("RZERO ");
-  // Serial.print(rzero);
-  // Serial.println();
 
-
-  // Serial.print(1);
-  // Serial.print(address[0]);
-  // delay(2000);
-  // Serial.print(t);
-  // Serial.print("°C");
-  // Serial.print(" ");
-  // Serial.print("ВЛАЖНОСТЬ ");
-  // Serial.print(h);
-  // Serial.println("%");
 }
 
