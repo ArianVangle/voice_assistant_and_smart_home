@@ -27,8 +27,8 @@ import serial.tools.list_ports
 from datetime import datetime
 from smart_lamp import *
 from transliterate import translit
-from answer import * #файл с ответами
-from config import * #файл со словарём команд и их тригерами
+from answer import * 
+from config import * 
 import g4f
 import telebot
 import pymorphy3
@@ -69,7 +69,7 @@ def choose_command(textin, abs=True):
 				command_value_list.append(commands[keys][i])
 				command_value = commands[keys][i]
 				command_list.append(keys)
-	command_list = list(set(command_list)) #удаление повторов из command_list
+	command_list = list(set(command_list)) 
 	print(command_list)
 	if 'WIKIPEDIA' in command_list:
 		command_keys = 'WIKIPEDIA'
@@ -136,28 +136,6 @@ def weather():
 
 def wikipedia():
 	global answer_text, text
-	# answer_text = ''
-	# command_value_list = command_value.split() #преобразование сказанной фразы и значения ключа команды в список
-	# text_list = text.split()
-	# index_start_command = 0
-	# for i in text_list:     #удаление слов до запроса пользователя
-	# 	if fuzz.token_set_ratio(i, command_value_list[0]) > 80:
-	# 		index_start_command = text_list.index(i)
-	# del text_list[0:index_start_command + 1]
-	# query_word = ' '.join(text_list)
-	# # print(query_word)
-	# try:
-	# 	wiki.set_lang('ru')
-	# 	query = wiki.summary(query_word, sentences = 10)
-	# 	delete_brackets_text = re.sub("\[.*?\]", "", query)
-	# 	delete_brackets_text = re.sub("\(.*?\)", "", delete_brackets_text)
-	# 	sentences = delete_brackets_text.split('.')
-	# 	while len(sentences) > 1: #укорачивание найденного текста-ответа до одного предложения
-	# 		sentences.pop(-1)
-	# 	sentences = '.'.join(sentences)
-	# 	answer_text += sentences
-	# except Exception as e:
-	# 	answer_text = e
 	answer_text = gpt4o_ans(text)
 
 def screen_brightness():
@@ -165,7 +143,7 @@ def screen_brightness():
 	global text, answer_text
 	brightness = sbc.get_brightness()
 	print(text)
-	#--------------------------------------
+
 	brightness_list = []
 	text = text.split()
 	for i in text:
@@ -181,7 +159,7 @@ def screen_brightness():
 		except:
 			answer_text = (f'минимум яркости - ноль, а максимум сто, не могу поставить {n2t(sum(brightness_list))}')
 
-#------------------------------------------
+
 	if fuzz.token_set_ratio(text, 'повысь') > 90 or fuzz.token_set_ratio(text, 'увеличь') > 90:
 		print('я в повысь')
 		sbc.set_brightness(brightness[0] + 20)
@@ -254,7 +232,7 @@ def temp_hum_sensor():
 def gas_sensor():
 	global answer_text, text
 	rec = com_receiving()
-	# print(rec.split())
+
 	if rec != 0:
 		print(rec)
 		gas = rec.split()[5]
@@ -270,7 +248,7 @@ def info(message):
 	current_time =  now.strftime("%d/%m/%Y %H:%M:%S")
 	with open('bot.txt', 'a', encoding='utf8') as file:
 		file.write(current_time + ' ' + str(message.from_user.username)+ ' ' +  message.text +  '\n')
-	# bot.send_message(message.chat.id, message.text + f'\n {choose_command(message.text)}')
+
 	bot.send_message(message.chat.id, f'\n {choose_command(message.text)[1]}')
 
 	
